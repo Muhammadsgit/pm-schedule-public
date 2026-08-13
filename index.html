@@ -351,16 +351,16 @@
     <div class="gantt-scroll">
       <div class="gantt" id="ganttRoot">
 
-        <div class="today-line" style="height: 506px;"></div>
-        <div class="today-flag">TODAY</div>
+        <div class="today-line" style="height: 506px; left: 166px;"></div>
+        <div class="today-flag" style="left: 166px;">TODAY</div>
 
         <div class="g-row g-header">
           <div class="g-label"></div>
           <div class="g-track">
             <div class="month-tag" style="left:2px;">AUGUST 2026</div>
             <div class="month-tag" style="left:722px;">SEPT</div>
-            <div class="daycell is-today" style="left:2px;"><span class="dow">Wed</span><span class="dnum">12</span></div>
-            <div class="daycell" style="left:38px;"><span class="dow">Thu</span><span class="dnum">13</span></div>
+            <div class="daycell" style="left:2px;"><span class="dow">Wed</span><span class="dnum">12</span></div>
+            <div class="daycell is-today" style="left:38px;"><span class="dow">Thu</span><span class="dnum">13</span></div>
             <div class="daycell" style="left:74px;"><span class="dow">Fri</span><span class="dnum">14</span></div>
             <div class="daycell" style="left:110px;"><span class="dow">Sat</span><span class="dnum">15</span></div>
             <div class="daycell" style="left:146px;"><span class="dow">Sun</span><span class="dnum">16</span></div>
@@ -399,40 +399,40 @@
         <div class="g-row bodyrow" id="row-2">
           <div class="g-label">
             <div class="top"><span class="swo2">C9&bull;&bull;</span></div>
-            <div class="meta"><span class="g-date" id="date-2">Aug 19&ndash;20</span> &middot; confirmed</div>
+            <div class="meta"><span class="g-date" id="date-2">Aug 31&ndash;Sep 1</span> &middot; rescheduled</div>
           </div>
           <div class="g-track">
-            <div class="bar flag" id="bar-2" data-start="7" data-span="2" style="left:254px; width:68px;">C9&bull;&bull;</div>
+            <div class="bar flag" id="bar-2" data-start="19" data-span="2" style="left:686px; width:68px;">C9&bull;&bull;</div>
           </div>
         </div>
 
         <div class="g-row bodyrow" id="row-3">
           <div class="g-label">
-            <div class="top"><span class="swo2">D6&bull;&bull;</span></div>
-            <div class="meta"><span class="g-date" id="date-3">Aug 19&ndash;21</span> &middot; confirmed</div>
+            <div class="top"><span class="swo2">D6&bull;&bull;</span><span class="badge overdue">Conflict</span></div>
+            <div class="meta"><span class="g-date" id="date-3">Aug 31&ndash;Sep 2</span> &middot; rescheduled</div>
           </div>
           <div class="g-track">
-            <div class="bar head" id="bar-3" data-start="7" data-span="3" style="left:254px; width:104px;">D6&bull;&bull;</div>
+            <div class="bar head" id="bar-3" data-start="19" data-span="3" style="left:686px; width:104px;">D6&bull;&bull;</div>
           </div>
         </div>
 
         <div class="g-row bodyrow" id="row-4">
           <div class="g-label">
-            <div class="top"><span class="swo2">A4&bull;&bull;</span><span class="badge overdue">Conflict</span></div>
-            <div class="meta"><span class="g-date" id="date-4">Aug 21</span> &middot; unconfirmed</div>
+            <div class="top"><span class="swo2">A4&bull;&bull;</span></div>
+            <div class="meta"><span class="g-date" id="date-4">Aug 18</span> &middot; proposed</div>
           </div>
           <div class="g-track">
-            <div class="bar simple" id="bar-4" data-start="9" data-span="1" style="left:326px; width:32px;">A4&bull;&bull;</div>
+            <div class="bar simple" id="bar-4" data-start="6" data-span="1" style="left:218px; width:32px;">A4&bull;&bull;</div>
           </div>
         </div>
 
         <div class="g-row bodyrow" id="row-5">
           <div class="g-label">
             <div class="top"><span class="swo2">D0&bull;&bull;</span></div>
-            <div class="meta"><span class="g-date" id="date-5">Aug 25</span> &middot; proposed</div>
+            <div class="meta"><span class="g-date" id="date-5">Aug 19</span> &middot; confirmed</div>
           </div>
           <div class="g-track">
-            <div class="bar simple" id="bar-5" data-start="13" data-span="1" style="left:470px; width:32px;">D0&bull;&bull;</div>
+            <div class="bar simple" id="bar-5" data-start="7" data-span="1" style="left:254px; width:32px;">D0&bull;&bull;</div>
           </div>
         </div>
 
@@ -448,8 +448,8 @@
 
         <div class="g-row bodyrow" id="row-7">
           <div class="g-label">
-            <div class="top"><span class="swo2">AE&bull;&bull;</span></div>
-            <div class="meta"><span class="g-date" id="date-7">Sep 1&ndash;2</span> &middot; warranty window</div>
+            <div class="top"><span class="swo2">AE&bull;&bull;</span><span class="badge overdue">Conflict</span></div>
+            <div class="meta"><span class="g-date" id="date-7">Sep 1&ndash;2</span> &middot; needs new date</div>
           </div>
           <div class="g-track">
             <div class="bar head" id="bar-7" data-start="20" data-span="2" style="left:722px; width:68px;">AE&bull;&bull;</div>
@@ -474,11 +474,11 @@
       <div class="item"><span class="chip" style="background:var(--cat-head);"></span>96 head installed &middot; ~2 days</div>
       <div class="item"><span class="chip" style="background:repeating-linear-gradient(45deg, var(--cat-flag) 0 4px, var(--cat-flag-dk) 4px 8px);"></span>Duration unconfirmed &mdash; flagged for review</div>
       <div class="item"><span class="chip" style="background:var(--critical-bg); border:1px solid var(--critical); box-shadow:none;"></span>Overdue against original booking</div>
-      <div class="item"><span class="chip" style="background:var(--today-line); width:2px; padding:0 10px;"></span>Today &middot; Aug 12</div>
+      <div class="item"><span class="chip" style="background:var(--today-line); width:2px; padding:0 10px;"></span>Today &middot; Aug 13</div>
     </div>
   </section>
 
-  <footer>Public mirror &middot; asset codes masked, no customer or contact data &middot; as of Aug 12, 2026</footer>
+  <footer>Public mirror &middot; asset codes masked, no customer or contact data &middot; as of Aug 13, 2026</footer>
 
 </div>
 
