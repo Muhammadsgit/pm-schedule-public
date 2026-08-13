@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PM &amp; Service Schedule — Gantt</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg:        #eef1f2;
+    --surface:   #fcfcfb;
+    --surface-2: #f2f4f4;
+    --ink:       #0b0b0b;
+    --ink-2:     #52514e;
+    --muted:     #898781;
+    --grid:      #e1e0d9;
+    --baseline:  #c3c2b7;
+    --border:    rgba(11,11,11,0.10);
+    --accent:    #184f95;
+    --accent-ink: #ffffff;
+
+    --cat-simple: #2a78d6;
+    --cat-head:   #1baf7a;
+    --cat-flag:   #eb6834;
+    --cat-flag-dk:#b74d1f;
+
+    --critical:   #d03b3b;
+    --critical-bg:#fbe9e8;
+    --today-line: #184f95;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg:        #0d0d0d;
+      --surface:   #1a1a19;
+      --surface-2: #202020;
+      --ink:       #ffffff;
+      --ink-2:     #c3c2b7;
+      --muted:     #898781;
+      --grid:      #2c2c2a;
+      --baseline:  #383835;
+      --border:    rgba(255,255,255,0.10);
+      --accent:    #6fb0f2;
+      --accent-ink: #0d0d0d;
+
+      --cat-simple: #3987e5;
+      --cat-head:   #199e70;
+      --cat-flag:   #d95926;
+      --cat-flag-dk:#f0a978;
+
+      --critical:   #e66767;
+      --critical-bg:#3a1f1f;
+      --today-line: #6fb0f2;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:        #0d0d0d;
+    --surface:   #1a1a19;
+    --surface-2: #202020;
+    --ink:       #ffffff;
+    --ink-2:     #c3c2b7;
+    --muted:     #898781;
+    --grid:      #2c2c2a;
+    --baseline:  #383835;
+    --border:    rgba(255,255,255,0.10);
+    --accent:    #6fb0f2;
+    --accent-ink: #0d0d0d;
+
+    --cat-simple: #3987e5;
+    --cat-head:   #199e70;
+    --cat-flag:   #d95926;
+    --cat-flag-dk:#f0a978;
+
+    --critical:   #e66767;
+    --critical-bg:#3a1f1f;
+    --today-line: #6fb0f2;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 28px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 6px 0 4px;
+    font-size: clamp(26px, 3.4vw, 34px);
+    font-weight: 750;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .subhead {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 15px;
+    max-width: 62ch;
+    line-height: 1.5;
+  }
+  .stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    min-width: 128px;
+  }
+  .stat .n {
+    font-size: 20px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .stat .l {
+    font-size: 11.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 3px;
+  }
+
+  section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 22px 24px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+  .section-note { font-size: 12.5px; color: var(--muted); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+  .badge.overdue { background: var(--critical-bg); color: var(--critical); }
+
+  .gantt-scroll { overflow-x: auto; padding-bottom: 4px; }
+  .gantt {
+    position: relative;
+    width: 1074px;
+  }
+  .g-row {
+    display: flex;
+    align-items: stretch;
+  }
+  .g-label {
+    width: 130px;
+    flex: 0 0 130px;
+    padding: 8px 12px 8px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+  }
+  .g-label .top { display: flex; align-items: center; gap: 7px; }
+  .g-label .swo2 { font-weight: 650; font-size: 13px; }
+  .g-label .meta { font-size: 11.5px; color: var(--muted); }
+
+  .g-track {
+    position: relative;
+    width: 944px;
+    flex: 0 0 944px;
+    background-image: repeating-linear-gradient(
+      to right,
+      transparent 0 108px,
+      var(--surface-2) 108px 180px,
+      transparent 180px 252px
+    );
+    border-top: 1px solid var(--grid);
+  }
+  .g-header .g-track { border-top: none; }
+  .g-row:last-child .g-track { border-bottom: 1px solid var(--grid); }
+
+  .g-header { height: 42px; }
+  .g-header .g-track { position: relative; }
+  .month-tag {
+    position: absolute;
+    top: 0; left: 0;
+    height: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    padding-left: 4px;
+  }
+  .daycell {
+    position: absolute;
+    top: 16px;
+    width: 36px;
+    height: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .daycell .dow { font-size: 9px; letter-spacing: 0.02em; }
+  .daycell .dnum { font-weight: 650; color: var(--ink-2); }
+  .daycell.is-today .dnum { color: var(--accent); }
+
+  .bodyrow { height: 58px; }
+  .bar {
+    position: absolute;
+    top: 11px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 9px;
+    font-size: 11.5px;
+    font-weight: 650;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+  }
+  .bar.simple { background: var(--cat-simple); }
+  .bar.head   { background: var(--cat-head); }
+  .bar.flag   {
+    background: repeating-linear-gradient(45deg, var(--cat-flag) 0 6px, var(--cat-flag-dk) 6px 12px);
+    outline: 2px dashed var(--cat-flag-dk);
+    outline-offset: -2px;
+  }
+  .bar {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    transition: box-shadow .15s, opacity .15s;
+  }
+  .bar.dragging {
+    cursor: grabbing;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.28);
+    opacity: 0.95;
+    z-index: 5;
+  }
+  .g-date { font-variant-numeric: tabular-nums; }
+
+  .drag-hint { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; }
+
+  .today-line {
+    position: absolute;
+    top: 0;
+    left: 130px;
+    width: 2px;
+    background: var(--today-line);
+    z-index: 3;
+  }
+  .today-flag {
+    position: absolute;
+    top: -20px;
+    left: 130px;
+    transform: translateX(-1px);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--today-line);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--grid);
+    font-size: 12.5px;
+    color: var(--ink-2);
+  }
+  .legend .item { display: flex; align-items: center; gap: 7px; }
+  .legend .chip { width: 22px; height: 12px; border-radius: 4px; flex: none; }
+
+  footer {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--muted);
+    padding-top: 4px;
+  }
+
+  @media (max-width: 700px) {
+    .page { padding: 28px 16px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div>
+    <div class="eyebrow">Field Service &middot; Muhammad Hassan</div>
+    <h1>PM &amp; Service Schedule</h1>
+    <p class="subhead">Public read-only mirror of the current PM/service Gantt &mdash; SWO and asset codes only, no customer or contact details. Durations follow the shop rule: an 8&#8209;channel unit with no 96&nbsp;head runs about 6 hours; add a 96&nbsp;head and it runs close to two days.</p>
+
+    <div class="stat-row">
+      <div class="stat"><div class="n">8</div><div class="l">Scheduled SWOs</div></div>
+      <div class="stat"><div class="n">Aug&nbsp;12&#8209;Sep&nbsp;4</div><div class="l">Coverage window</div></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <h2>Gantt &mdash; Aug 12 to Sep 4, 2026</h2>
+      <span class="section-note">One engineer, sequential, Mon&ndash;Fri only</span>
+    </div>
+
+    <div class="drag-hint">Drag a bar to preview a different date &mdash; it snaps to weekdays. This is a static public mirror: changes here are local to your browser only and are never saved anywhere.</div>
+
+    <div class="gantt-scroll">
+      <div class="gantt" id="ganttRoot">
+
+        <div class="today-line" style="height: 506px;"></div>
+        <div class="today-flag">TODAY</div>
+
+        <div class="g-row g-header">
+          <div class="g-label"></div>
+          <div class="g-track">
+            <div class="month-tag" style="left:2px;">AUGUST 2026</div>
+            <div class="month-tag" style="left:722px;">SEPT</div>
+            <div class="daycell is-today" style="left:2px;"><span class="dow">Wed</span><span class="dnum">12</span></div>
+            <div class="daycell" style="left:38px;"><span class="dow">Thu</span><span class="dnum">13</span></div>
+            <div class="daycell" style="left:74px;"><span class="dow">Fri</span><span class="dnum">14</span></div>
+            <div class="daycell" style="left:110px;"><span class="dow">Sat</span><span class="dnum">15</span></div>
+            <div class="daycell" style="left:146px;"><span class="dow">Sun</span><span class="dnum">16</span></div>
+            <div class="daycell" style="left:182px;"><span class="dow">Mon</span><span class="dnum">17</span></div>
+            <div class="daycell" style="left:218px;"><span class="dow">Tue</span><span class="dnum">18</span></div>
+            <div class="daycell" style="left:254px;"><span class="dow">Wed</span><span class="dnum">19</span></div>
+            <div class="daycell" style="left:290px;"><span class="dow">Thu</span><span class="dnum">20</span></div>
+            <div class="daycell" style="left:326px;"><span class="dow">Fri</span><span class="dnum">21</span></div>
+            <div class="daycell" style="left:362px;"><span class="dow">Sat</span><span class="dnum">22</span></div>
+            <div class="daycell" style="left:398px;"><span class="dow">Sun</span><span class="dnum">23</span></div>
+            <div class="daycell" style="left:434px;"><span class="dow">Mon</span><span class="dnum">24</span></div>
+            <div class="daycell" style="left:470px;"><span class="dow">Tue</span><span class="dnum">25</span></div>
+            <div class="daycell" style="left:506px;"><span class="dow">Wed</span><span class="dnum">26</span></div>
+            <div class="daycell" style="left:542px;"><span class="dow">Thu</span><span class="dnum">27</span></div>
+            <div class="daycell" style="left:578px;"><span class="dow">Fri</span><span class="dnum">28</span></div>
+            <div class="daycell" style="left:614px;"><span class="dow">Sat</span><span class="dnum">29</span></div>
+            <div class="daycell" style="left:650px;"><span class="dow">Sun</span><span class="dnum">30</span></div>
+            <div class="daycell" style="left:686px;"><span class="dow">Mon</span><span class="dnum">31</span></div>
+            <div class="daycell" style="left:722px;"><span class="dow">Tue</span><span class="dnum">1</span></div>
+            <div class="daycell" style="left:758px;"><span class="dow">Wed</span><span class="dnum">2</span></div>
+            <div class="daycell" style="left:794px;"><span class="dow">Thu</span><span class="dnum">3</span></div>
+            <div class="daycell" style="left:830px;"><span class="dow">Fri</span><span class="dnum">4</span></div>
+          </div>
+        </div>
+
+        <div class="g-row bodyrow" id="row-I795">
+          <div class="g-label">
+            <div class="top"><span class="swo2">I795</span></div>
+            <div class="meta"><span class="g-date" id="date-I795">Fri Aug 14</span> &middot; verification follow-up</div>
+          </div>
+          <div class="g-track">
+            <div class="bar flag" id="bar-I795" data-start="2" data-span="1" style="left:74px; width:32px;">I795</div>
+          </div>
+        </div>
+
+        <div class="g-row bodyrow" id="row-C952">
+          <div class="g-label">
+            <div class="top"><span class="swo2">C952</span></div>
+            <div class="meta"><span class="g-date" id="date-C952">Aug 19&ndash;20</span> &middot; confirmed</div>
+          </div>
+          <div class="g-track">
+            <div class="bar flag" id="bar-C952" data-start="7" data-span="2" style="left:254px; width:68px;">C952</div>
+          </div>
+        </div>
+
+        <div class="g-row bodyrow" id="row-D601">
+          <div class="g-label">
+            <div class="top"><span class="swo2">D601</span></div>
+            <div class="meta"><span class="g-date" id="date-D601">Aug 19&ndash;21</span> &middot; confirmed</div>
+          </div>
+          <div class="g-track">
+            <div class="bar head" id="bar-D601" data-start="7" data-span="3" style="left:254px; width:104px;">D601</div>
+          </div>
+        </div>
+
+        <div class="g-row bodyrow" id="row-A457">
+          <div class="g-label">
+            <div class="top"><span class="swo2">A457</span><span class="badge overdue">Conflict</span></div>
+            <div class="meta"><span class="g-date" id="date-A457">Aug 21</span> &middot; unconfirmed</div>
+          </div>
+          <div class="g-track">
+            <div class="bar simple" id="bar-A457" data-start="9" data-span="1" style="left:326px; width:32px;">A457</div>
+          </div>
+        </div>
+
+        <div class="g-row bodyrow" id="row-D009">
+          <div class="g-label">
+            <div class="top"><span class="swo2">D009</span></div>
+            <div class="meta"><span class="g-date" id="date-D009">Aug 25</span> &middot; proposed</div>
+          </div>
+          <div class="g-track">
+            <div class="bar simple" id="bar-D009" data-start="13" data-span="1" style="left:470px; width:32px;">D009</div>
+          </div>
+        </div>
+
+        <div class="g-row bodyrow" id="row-A504">
+          <div class="g-label">
+            <div class="top"><span class="swo2">A504</span></div>
+            <div class="meta"><span class="g-date" id="date-A504">Aug 27</span> &middot; unconfirmed</div>
+          </div>
+          <div class="g-track">
+            <div class="bar simple" id="bar-A504" data-start="15" data-span="1" style="left:542px; width:32px;">A504</div>
+          </div>
+        </div>
+
+        <div class="g-row bodyrow" id="row-AE76">
+          <div class="g-label">
+            <div class="top"><span class="swo2">AE76</span></div>
+            <div class="meta"><span class="g-date" id="date-AE76">Sep 1&ndash;2</span> &middot; warranty window</div>
+          </div>
+          <div class="g-track">
+            <div class="bar head" id="bar-AE76" data-start="20" data-span="2" style="left:722px; width:68px;">AE76</div>
+          </div>
+        </div>
+
+        <div class="g-row bodyrow" id="row-E192">
+          <div class="g-label">
+            <div class="top"><span class="swo2">E192</span></div>
+            <div class="meta"><span class="g-date" id="date-E192">Sep 3&ndash;4</span></div>
+          </div>
+          <div class="g-track">
+            <div class="bar head" id="bar-E192" data-start="22" data-span="2" style="left:794px; width:68px;">E192</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="item"><span class="chip" style="background:var(--cat-simple);"></span>8&#8209;channel, no 96 head &middot; ~6 hrs</div>
+      <div class="item"><span class="chip" style="background:var(--cat-head);"></span>96 head installed &middot; ~2 days</div>
+      <div class="item"><span class="chip" style="background:repeating-linear-gradient(45deg, var(--cat-flag) 0 4px, var(--cat-flag-dk) 4px 8px);"></span>Duration unconfirmed &mdash; flagged for review</div>
+      <div class="item"><span class="chip" style="background:var(--critical-bg); border:1px solid var(--critical); box-shadow:none;"></span>Overdue against original booking</div>
+      <div class="item"><span class="chip" style="background:var(--today-line); width:2px; padding:0 10px;"></span>Today &middot; Aug 12</div>
+    </div>
+  </section>
+
+  <footer>Public mirror &middot; asset/SWO codes only, no customer or contact data &middot; as of Aug 12, 2026</footer>
+
+</div>
+
+<script>
+(function () {
+  var DAY_W = 36;
+  var NUM_DAYS = 24;
+  var WEEKENDS = [3, 4, 10, 11, 17, 18];
+  var DATES = ["Aug 12","Aug 13","Aug 14","Aug 15","Aug 16","Aug 17","Aug 18","Aug 19","Aug 20","Aug 21",
+               "Aug 22","Aug 23","Aug 24","Aug 25","Aug 26","Aug 27","Aug 28","Aug 29","Aug 30","Aug 31",
+               "Sep 1","Sep 2","Sep 3","Sep 4"];
+
+  function isWeekend(i) { return WEEKENDS.indexOf(i) !== -1; }
+
+  function nearestWeekday(i) {
+    i = Math.max(0, Math.min(NUM_DAYS - 1, i));
+    if (!isWeekend(i)) return i;
+    for (var d = 1; d < NUM_DAYS; d++) {
+      if (i - d >= 0 && !isWeekend(i - d)) return i - d;
+      if (i + d < NUM_DAYS && !isWeekend(i + d)) return i + d;
+    }
+    return i;
+  }
+
+  function fmtRange(start, span) {
+    var end = start + span - 1;
+    if (span <= 1) return DATES[start];
+    return DATES[start] + "–" + DATES[end].replace(/^[A-Za-z]+ /, "");
+  }
+
+  Array.prototype.slice.call(document.querySelectorAll('.bar')).forEach(function (bar) {
+    var swo = bar.id.replace('bar-', '');
+    var dragging = false, startX = 0, startLeft = 0;
+
+    function clampedLeftFor(clientX) {
+      var span = parseInt(bar.dataset.span, 10);
+      var maxLeft = 2 + (NUM_DAYS - span) * DAY_W;
+      return Math.max(2, Math.min(maxLeft, startLeft + (clientX - startX)));
+    }
+
+    function startDrag(clientX) {
+      if (dragging) return;
+      dragging = true;
+      startX = clientX;
+      startLeft = parseFloat(bar.style.left);
+      bar.classList.add('dragging');
+    }
+
+    function moveDrag(clientX) {
+      if (!dragging) return;
+      bar.style.left = clampedLeftFor(clientX) + 'px';
+    }
+
+    function endDrag(clientX) {
+      if (!dragging) return;
+      dragging = false;
+      bar.classList.remove('dragging');
+
+      var finalLeft = (typeof clientX === 'number') ? clampedLeftFor(clientX) : parseFloat(bar.style.left);
+      var span = parseInt(bar.dataset.span, 10);
+      var rawIndex = Math.round((finalLeft - 2) / DAY_W);
+      rawIndex = Math.max(0, Math.min(NUM_DAYS - span, rawIndex));
+      var snapped = Math.max(0, Math.min(NUM_DAYS - span, nearestWeekday(rawIndex)));
+
+      bar.dataset.start = snapped;
+      bar.style.left = (2 + snapped * DAY_W) + 'px';
+
+      var dateEl = document.getElementById('date-' + swo);
+      if (dateEl) dateEl.textContent = fmtRange(snapped, span);
+    }
+
+    bar.addEventListener('pointerdown', function (e) { startDrag(e.clientX); });
+    document.addEventListener('pointermove', function (e) { moveDrag(e.clientX); });
+    document.addEventListener('pointerup', function (e) { endDrag(e.clientX); });
+    document.addEventListener('pointercancel', function (e) { endDrag(e.clientX); });
+  });
+})();
+</script>
+</body>
+</html>
